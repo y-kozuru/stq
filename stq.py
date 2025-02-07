@@ -103,7 +103,7 @@ class SimpleTaskQueueAppEngine:
 
 def main(page: flet.Page):
     app_engine = SimpleTaskQueueAppEngine()
-    page.title = "Simple Task Queue"
+    page.title = "stq - simple task queue"
     page.window.min_width = 340
     page.window.min_height = 340
     page.window.width = page.window.min_width
