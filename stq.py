@@ -53,22 +53,26 @@ class TaskQueue:
 
 class TestTask(unittest.TestCase):
     def test_content(self):
-        expected = "test task"
-        task = Task("test task")
+        expected = "task1"
+        task = Task(expected)
         self.assertEqual(task.content(), expected)
+        self.assertEqual(task.priority(), False)
+        task = Task(expected, priority=True)
+        self.assertEqual(task.priority(), True)
 
 class TestTaskQueue(unittest.TestCase):
     def test_task_queue(self):
         task_queue = TaskQueue()
         task_queue.enqueue(Task("task1"))
-        task_queue.enqueue(Task("task2"))
         self.assertEqual(task_queue.empty(), False)
+        task_queue.enqueue(Task("task2"))
         task = task_queue.dequeue()
         self.assertEqual(task.content(), "task1")
-        task_queue.dequeue()
-        self.assertEqual(task_queue.empty(), True)
+        task_queue.enqueue(Task("task3", priority=True))
         task = task_queue.dequeue()
-        self.assertEqual(task, None)
+        self.assertEqual(task.content(), "task3")
+        task = task_queue.dequeue()
+        self.assertEqual(task_queue.empty(), True)
 
 class SimpleTaskQueueAppEngine:
     """ App engine for separating GUI and domain model """
