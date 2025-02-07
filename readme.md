@@ -2,8 +2,8 @@
 Priority queue for simple task management.
 
 # How to Use
-Write a task in **New Task** and press Enter to ad d the task.  
-Click the exclamation mark instead of pressing Enter to ad the task as a priority task.
+Write a task in **New Task** and press Enter to add the task.  
+Click the exclamation mark instead of pressing Enter to add the task as a priority task.
 
 Click the dequeue button (down arrow) to get a task from the queue.  
 If priority tasks exist, they will be deququed first.
