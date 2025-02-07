@@ -20,11 +20,11 @@ When you launch the app again, it will restore the queue from tasks.json.
 tasks.json will be created in the directory where the app was run.
 
 # Setup
-```python
+```bash
 pip install -r requirements.txt
 ```
 
 # Run
-```python
+```bash
 python stq.py
 ```
