@@ -7,37 +7,49 @@ import queue
 import unittest
 
 class Task:
-    def __init__(self, content: str):
+    def __init__(self, content: str, priority: bool = False):
         self._content = content
+        self._priority = priority
     
     def content(self) -> str:
         return self._content
+    
+    def priority(self) -> bool:
+        return self._priority
+    
+    def to_json(self) -> dict:
+        return {"content": self.content(), "priority": self.priority()}
 
 class TaskQueue:
     def __init__(self):
-        self._queue = queue.Queue()
+        self._standard_queue = queue.Queue()
+        self._priority_queue = queue.Queue()
     
     def enqueue(self, task: Task):
-        self._queue.put(task)
+        if task.priority():
+            self._priority_queue.put(task)
+        else:
+            self._standard_queue.put(task)
     
     def dequeue(self) -> Task:
-        return self._queue.get()
-    
-    def size(self) -> int:
-        return self._queue.qsize()
+        if not self._priority_queue.empty():
+            return self._priority_queue.get()
+        else:
+            return self._standard_queue.get()
     
     def empty(self) -> bool:
-        return self._queue.empty()
+        return self._priority_queue.empty() and self._standard_queue.empty()
     
     def to_json(self) -> dict:
         result = []
         while not self.empty():
-            result.append(self.dequeue().content())
+            result.append(self.dequeue().to_json())
         return {"tasks": result}
     
-    def from_json(self, from_data: dict):
-        for task in from_data["tasks"]:
-            self.enqueue(Task(task))
+    def from_json(self, tasks_json: dict):
+        for task_json in tasks_json["tasks"]:
+            task = Task(task_json["content"], task_json["priority"])
+            self.enqueue(task)
 
 class TestTask(unittest.TestCase):
     def test_content(self):
@@ -50,11 +62,9 @@ class TestTaskQueue(unittest.TestCase):
         task_queue = TaskQueue()
         task_queue.enqueue(Task("task1"))
         task_queue.enqueue(Task("task2"))
-        self.assertEqual(task_queue.size(), 2)
         self.assertEqual(task_queue.empty(), False)
         task = task_queue.dequeue()
         self.assertEqual(task.content(), "task1")
-        self.assertEqual(task_queue.size(), 1)
         task_queue.dequeue()
         self.assertEqual(task_queue.empty(), True)
         task = task_queue.dequeue()
@@ -74,10 +84,10 @@ class SimpleTaskQueueAppEngine:
             tasks = json.load(f)
         self._task_queue.from_json(tasks)
     
-    def enqueue(self, content: str):
+    def enqueue(self, content: str, priority: bool = False):
         if content == "":
             return
-        self._task_queue.enqueue(Task(content))
+        self._task_queue.enqueue(Task(content, priority=priority))
 
     def can_dequeue(self) -> bool:
         return not self._task_queue.empty()
@@ -104,8 +114,8 @@ class SimpleTaskQueueAppEngine:
 def main(page: flet.Page):
     app_engine = SimpleTaskQueueAppEngine()
     page.title = "stq - simple task queue"
-    page.window.min_width = 340
-    page.window.min_height = 340
+    page.window.min_width = 380
+    page.window.min_height = 380
     page.window.width = page.window.min_width
     page.window.height = page.window.min_height
     page.update()
@@ -137,6 +147,12 @@ def main(page: flet.Page):
         page.update()
     content = flet.TextField(label="New Task", on_submit=submit_new_task, width=200, text_size=14)
 
+    def priority_clicked(e):
+        app_engine.enqueue(content.value, priority=True)
+        content.value = ""
+        page.update()
+    priority = flet.IconButton(icon=flet.Icons.PRIORITY_HIGH_ROUNDED, on_click=priority_clicked, width=30)
+
     def dequeue_clicked(e):
         if not app_engine.can_dequeue():
             return
@@ -151,6 +167,7 @@ def main(page: flet.Page):
 
     page.add(flet.Row([
         flet.Column(controls=[content]),
+        flet.Column(controls=[priority]),
         flet.Column(controls=[dequeue]),
         flet.Column(controls=[done])
     ]))
